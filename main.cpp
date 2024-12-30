@@ -1,7 +1,7 @@
-#include "PngReader.h"
+#include "PNGReader.h"
 
 int main() {
-    const PngReader png("test.png");
+    const PNGReader png("test.png");
 
     const auto pixel_rgba = png.get_pixel_rgba(0, 0);
 

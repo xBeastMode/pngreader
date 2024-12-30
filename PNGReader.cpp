@@ -1,11 +1,11 @@
-#include "PngReader.h"
+#include "PNGReader.h"
 
-std::vector<int> PngReader::get_pixel_rgba(const int x, const int y) const {
+std::vector<int> PNGReader::get_pixel_rgba(const int x, const int y) const {
     const size_t index = (y * ihdr_chunk.width + x) * 4;
     return {_color_buffer[index], _color_buffer[index + 1], _color_buffer[index + 2], _color_buffer[index + 3]};
 }
 
-uint8_t PngReader::paeth_predictor(const uint8_t a, const uint8_t b, const uint8_t c) {
+uint8_t PNGReader::paeth_predictor(const uint8_t a, const uint8_t b, const uint8_t c) {
     const int p = a + b - c;
     const int pa = abs(p - a);
     const int pb = abs(p - b);
@@ -19,7 +19,7 @@ uint8_t PngReader::paeth_predictor(const uint8_t a, const uint8_t b, const uint8
     return c;
 }
 
-uint8_t* PngReader::reconstruct_scanline(const uint8_t* color_buffer) const {
+uint8_t* PNGReader::reconstruct_scanline(const uint8_t* color_buffer) const {
     constexpr uint8_t bytes_per_pixel = 4;
     const uint32_t scanline_len = ihdr_chunk.width * bytes_per_pixel;
     const auto reconstructed = new uint8_t[ihdr_chunk.height * scanline_len];
@@ -66,7 +66,7 @@ uint8_t* PngReader::reconstruct_scanline(const uint8_t* color_buffer) const {
     return reconstructed;
 }
 
-void PngReader::read_ihdr_chunk() {
+void PNGReader::read_ihdr_chunk() {
     input_file.read(reinterpret_cast<char*>(&signature), sizeof(signature));
 
     if (signature != 0x0A1A0A0D474E5089) {
@@ -92,7 +92,7 @@ void PngReader::read_ihdr_chunk() {
     input_file.seekg(1, std::ios::cur);
 }
 
-void PngReader::read_idat_chunk() {
+void PNGReader::read_idat_chunk() {
     std::vector<uint8_t> compressed_data;
     size_t compressed_data_len = 0;
 

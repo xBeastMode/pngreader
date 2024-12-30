@@ -4,7 +4,7 @@
 #include <iostream>
 #include <zlib.h>
 
-class PngReader {
+class PNGReader {
 public:
     std::ifstream input_file;
     uint64_t signature = 0;
@@ -21,7 +21,7 @@ public:
 
     uint8_t* _color_buffer = nullptr;
 
-    explicit PngReader(const std::string& filename) : input_file(filename, std::ios::binary) {
+    explicit PNGReader(const std::string& filename) : input_file(filename, std::ios::binary) {
         if (!input_file) {
             throw std::runtime_error("Error opening file");
         }
@@ -32,7 +32,7 @@ public:
         input_file.close();
     }
 
-    ~PngReader() {
+    ~PNGReader() {
         delete[] _color_buffer;
     }
 
