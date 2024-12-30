@@ -1,0 +1,3 @@
+/Users/angelmaya/CLionProjects/imagenmanipulation/cmake-build-debug/CMakeFiles/imagenmanipulation.dir
+/Users/angelmaya/CLionProjects/imagenmanipulation/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/angelmaya/CLionProjects/imagenmanipulation/cmake-build-debug/CMakeFiles/rebuild_cache.dir
