@@ -1,4 +1,4 @@
-#include "PNGReader.h"
+#include "png_reader.h"
 
 int main() {
     const PNGReader png("test.png");

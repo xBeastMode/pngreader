@@ -1,8 +1,48 @@
-#include "PNGReader.h"
+#include "png_reader.h"
+
+void PNGReader::verify_signature() {
+    input_file.read(reinterpret_cast<char*>(&signature), sizeof(signature));
+
+    if (signature != 0x0A1A0A0D474E5089) {
+        throw std::runtime_error("File is not a PNG file");
+    }
+}
+
+uint8_t PNGReader::get_bytes_per_pixel() const {
+    int channels = 0;
+    switch (ihdr_chunk.color_type) {
+        case 0: channels = 1; break; // Grayscale
+        case 2: channels = 3; break; // RGB
+        case 3: channels = 1; break; // Palette-based
+        case 4: channels = 2; break; // Grayscale + Alpha
+        case 6: channels = 4; break; // RGBA
+        default:
+            throw std::runtime_error("Unsupported PNG color type.");
+    }
+    return ihdr_chunk.bit_depth * channels / 8;
+}
+
+uint64_t PNGReader::get_scanline_length() const {
+    return ihdr_chunk.width * get_bytes_per_pixel();
+}
+
+uint64_t PNGReader::get_reconstructed_scanline_length() const {
+    return (1 + get_scanline_length()) * ihdr_chunk.height;
+}
 
 std::vector<int> PNGReader::get_pixel_rgba(const int x, const int y) const {
-    const size_t index = (y * ihdr_chunk.width + x) * 4;
-    return {_color_buffer[index], _color_buffer[index + 1], _color_buffer[index + 2], _color_buffer[index + 3]};
+    const size_t index = (y * ihdr_chunk.width + x) * get_bytes_per_pixel();
+
+    if (index >= get_reconstructed_scanline_length()) {
+        return {};
+    }
+
+    return {
+        _color_buffer[index],
+        _color_buffer[index + 1],
+        _color_buffer[index + 2],
+        _color_buffer[index + 3]
+    };
 }
 
 uint8_t PNGReader::paeth_predictor(const uint8_t a, const uint8_t b, const uint8_t c) {
@@ -20,20 +60,20 @@ uint8_t PNGReader::paeth_predictor(const uint8_t a, const uint8_t b, const uint8
 }
 
 uint8_t* PNGReader::reconstruct_scanline(const uint8_t* color_buffer) const {
-    constexpr uint8_t bytes_per_pixel = 4;
-    const uint32_t scanline_len = ihdr_chunk.width * bytes_per_pixel;
-    const auto reconstructed = new uint8_t[ihdr_chunk.height * scanline_len];
+    const uint8_t bytes_per_pixel = get_bytes_per_pixel();
+    const uint32_t scanline_len = get_scanline_length();
+    const auto reconstructed_color_buffer = new uint8_t[get_reconstructed_scanline_length()];
 
     auto recon_a = [&](const int i, const int j) {
-        return j >= bytes_per_pixel ? reconstructed[i * scanline_len + j - bytes_per_pixel] : 0;
+        return j >= bytes_per_pixel ? reconstructed_color_buffer[i * scanline_len + j - bytes_per_pixel] : 0;
     };
 
     auto recon_b = [&](const int i, const int j) {
-        return i > 0 ? reconstructed[(i - 1) * scanline_len + j] : 0;
+        return i > 0 ? reconstructed_color_buffer[(i - 1) * scanline_len + j] : 0;
     };
 
     auto recon_c = [&](const int i, const int j) {
-        return i > 0 && j >= bytes_per_pixel ? reconstructed[(i - 1) * scanline_len + j - bytes_per_pixel] : 0;
+        return i > 0 && j >= bytes_per_pixel ? reconstructed_color_buffer[(i - 1) * scanline_len + j - bytes_per_pixel] : 0;
     };
 
     for (int i = 0, f = 0, g = 0; i < ihdr_chunk.height; i++) {
@@ -42,44 +82,27 @@ uint8_t* PNGReader::reconstruct_scanline(const uint8_t* color_buffer) const {
             uint8_t reconstructed_x = 0;
             const uint8_t x = color_buffer[f++];
             switch (filter_type) {
-                case 0: //none
-                    reconstructed_x = x;
-                break;
-                case 1: //sub
-                    reconstructed_x = x + recon_a(i, j);
-                break;
-                case 2: //up
-                    reconstructed_x = x + recon_b(i, j);
-                break;
-                case 3: //average
-                    reconstructed_x = x + (recon_a(i, j) + recon_b(i, j)) / 2;
-                break;
-                case 4: //paeth
-                    reconstructed_x = x + paeth_predictor(recon_a(i, j), recon_b(i, j), recon_c(i, j));
-                break;
+                case 0: reconstructed_x = x; break; // None
+                case 1: reconstructed_x = x + recon_a(i, j); break; // Sub
+                case 2: reconstructed_x = x + recon_b(i, j); break; // Up
+                case 3: reconstructed_x = x + (recon_a(i, j) + recon_b(i, j)) / 2; break; // Average
+                case 4: reconstructed_x = x + paeth_predictor(recon_a(i, j), recon_b(i, j), recon_c(i, j)); break; // Paeth
                 default:;
             }
-            reconstructed[g++] = reconstructed_x & 0xff;
+            reconstructed_color_buffer[g++] = reconstructed_x & 0xff;
         }
     }
 
-    return reconstructed;
+    return reconstructed_color_buffer;
 }
 
 void PNGReader::read_ihdr_chunk() {
-    input_file.read(reinterpret_cast<char*>(&signature), sizeof(signature));
-
-    if (signature != 0x0A1A0A0D474E5089) {
-        throw std::runtime_error("File is not a PNG file");
-    }
-
     uint32_t chunkLength;
-    char chunkType[5] = {};
-
     input_file.read(reinterpret_cast<char*>(&chunkLength), sizeof(chunkLength));
-    chunkLength = __builtin_bswap32(chunkLength);
 
+    char chunkType[4] = {};
     input_file.read(chunkType, 4);
+
     if (std::string(chunkType) != "IHDR") {
         throw std::runtime_error("First chunk is not IHDR");
     }
@@ -119,7 +142,7 @@ void PNGReader::read_idat_chunk() {
         throw std::runtime_error("IDAT chunk not found");
     }
 
-    const size_t decompressed_data_len = (1 + ihdr_chunk.width * 4) * ihdr_chunk.height;
+    const size_t decompressed_data_len = get_reconstructed_scanline_length();
     std::vector<uint8_t> decompressed_data(decompressed_data_len);
 
     z_stream zs;

@@ -26,6 +26,7 @@ public:
             throw std::runtime_error("Error opening file");
         }
 
+        verify_signature();
         read_ihdr_chunk();
         read_idat_chunk();
 
@@ -36,6 +37,9 @@ public:
         delete[] _color_buffer;
     }
 
+
+    void verify_signature();
+
     uint32_t get_width() const { return ihdr_chunk.width; }
     uint32_t get_height() const { return ihdr_chunk.width; }
     uint8_t get_bit_depth() const { return ihdr_chunk.bit_depth; }
@@ -44,6 +48,9 @@ public:
     uint8_t get_filter_method() const { return ihdr_chunk.filter_method; }
     uint8_t get_interlace_method() const { return ihdr_chunk.interlace_method; }
     uint8_t* get_color_buffer() const { return _color_buffer; }
+    uint8_t get_bytes_per_pixel() const;
+    uint64_t get_scanline_length() const;
+    uint64_t get_reconstructed_scanline_length() const;
 
     std::vector<int> get_pixel_rgba(int x, int y) const;
 private:

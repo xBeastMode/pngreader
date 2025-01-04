@@ -55,8 +55,8 @@ build CMakeFiles/imagenmanipulation.dir/main.cpp.o: CXX_COMPILER__imagenmanipula
   OBJECT_DIR = CMakeFiles/imagenmanipulation.dir
   OBJECT_FILE_DIR = CMakeFiles/imagenmanipulation.dir
 
-build CMakeFiles/imagenmanipulation.dir/PngReader.cpp.o: CXX_COMPILER__imagenmanipulation_unscanned_Debug /Users/angelmaya/CLionProjects/imagenmanipulation/PngReader.cpp || cmake_object_order_depends_target_imagenmanipulation
-  DEP_FILE = CMakeFiles/imagenmanipulation.dir/PngReader.cpp.o.d
+build CMakeFiles/imagenmanipulation.dir/png_reader.cpp.o: CXX_COMPILER__imagenmanipulation_unscanned_Debug /Users/angelmaya/CLionProjects/imagenmanipulation/png_reader.cpp || cmake_object_order_depends_target_imagenmanipulation
+  DEP_FILE = CMakeFiles/imagenmanipulation.dir/png_reader.cpp.o.d
   FLAGS = -g -std=gnu++20 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk -fcolor-diagnostics
   OBJECT_DIR = CMakeFiles/imagenmanipulation.dir
   OBJECT_FILE_DIR = CMakeFiles/imagenmanipulation.dir
@@ -69,7 +69,7 @@ build CMakeFiles/imagenmanipulation.dir/PngReader.cpp.o: CXX_COMPILER__imagenman
 #############################################
 # Link the executable imagenmanipulation
 
-build imagenmanipulation: CXX_EXECUTABLE_LINKER__imagenmanipulation_Debug CMakeFiles/imagenmanipulation.dir/main.cpp.o CMakeFiles/imagenmanipulation.dir/PngReader.cpp.o | /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/lib/libz.tbd
+build imagenmanipulation: CXX_EXECUTABLE_LINKER__imagenmanipulation_Debug CMakeFiles/imagenmanipulation.dir/main.cpp.o CMakeFiles/imagenmanipulation.dir/png_reader.cpp.o | /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/lib/libz.tbd
   FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk
   LINK_LIBRARIES = /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk/usr/lib/libz.tbd
   OBJECT_DIR = CMakeFiles/imagenmanipulation.dir
